@@ -9,6 +9,7 @@ import {
   CreditCard,
   User,
   HelpCircle,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import careteLogo from "../../assets/carete_logo.png";
@@ -22,6 +23,7 @@ type NavItem = {
 const mainNav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/members", label: "Members", icon: Users },
+  { to: "/referrals", label: "Referrals", icon: UserPlus },
   { to: "/claims", label: "Claims", icon: FileText },
   { to: "/reports", label: "Reports", icon: BarChart3 },
 ];

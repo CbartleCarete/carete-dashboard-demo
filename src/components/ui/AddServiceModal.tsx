@@ -15,9 +15,16 @@ interface AddServiceModalProps {
   /** Services are recorded against a specific member — no picker. */
   member: Member;
   existingClaims: { id: string }[];
+  /** Prefills the program/service (e.g. opened from a referral's
+   *  "Create Claim" action) instead of starting from a blank form. */
+  initialServiceId?: string;
 }
 
-const CATEGORIES: ServiceCategory[] = ["ECM", "Community Supports"];
+const CATEGORIES: ServiceCategory[] = [
+  "ECM",
+  "Community Supports",
+  "Specialty Behavioral Health",
+];
 
 const fieldLabel = "text-sm font-medium text-ink-700";
 const fieldControl =
@@ -52,6 +59,7 @@ const AddServiceModal: FC<AddServiceModalProps> = ({
   onAddService,
   member,
   existingClaims,
+  initialServiceId,
 }) => {
   const [category, setCategory] = useState<ServiceCategory | "">("");
   const [serviceId, setServiceId] = useState("");
@@ -96,6 +104,16 @@ const AddServiceModal: FC<AddServiceModalProps> = ({
       setChargeAmount("");
     }
   }, [selectedVariant, units, chargeOverridden]);
+
+  useEffect(() => {
+    if (!isOpen || !initialServiceId) return;
+    const service = getServiceById(initialServiceId);
+    if (!service) return;
+    setCategory(service.category);
+    setServiceId(service.id);
+    setVariantId(service.variants.length === 1 ? service.variants[0].id : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialServiceId]);
 
   if (!isOpen) return null;
 

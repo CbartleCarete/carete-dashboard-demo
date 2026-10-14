@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FC } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, UserPlus, Filter, IdCard } from "lucide-react";
 import StatusBadge from "../components/ui/StatusBadge";
 import AddMemberModal from "../components/ui/AddMemberModal";
@@ -13,12 +13,17 @@ const fieldControl =
 
 const Members: FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const members = useMembers();
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilter, setShowFilter] = useState(false);
-  const [filterType, setFilterType] = useState<FilterType>(null);
-  const [filterValue, setFilterValue] = useState("");
+  const [filterType, setFilterType] = useState<FilterType>(
+    searchParams.get("status") ? "status" : null
+  );
+  const [filterValue, setFilterValue] = useState(
+    searchParams.get("status") ?? ""
+  );
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -108,11 +113,13 @@ const Members: FC = () => {
                 Eligibility Queue
               </h2>
               <p className="text-sm text-ink-500">
-                Members awaiting eligibility confirmation.
+                {filterType === "status" && filterValue.toLowerCase() === "active"
+                  ? "Members with confirmed eligibility."
+                  : "Members awaiting eligibility confirmation."}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start gap-2">
               <div className="relative w-full sm:w-80">
                 <Search
                   size={16}
@@ -149,53 +156,53 @@ const Members: FC = () => {
                     ))}
                   </div>
                 )}
-
-                {filterType && (
-                  <div className="absolute right-0 top-full mt-2 flex items-center gap-2 rounded-lg bg-white border border-ink-200 shadow-lg p-2 z-10">
-                    {filterType === "dob" && (
-                      <input
-                        type="text"
-                        placeholder="MM-DD-YYYY"
-                        value={filterValue}
-                        onChange={(e) => setFilterValue(e.target.value)}
-                        className={fieldControl}
-                      />
-                    )}
-                    {filterType === "mcp" && (
-                      <select
-                        value={filterValue}
-                        onChange={(e) => setFilterValue(e.target.value)}
-                        className={fieldControl}
-                      >
-                        <option value="">Select MCP</option>
-                        {uniqueMcps.map((mcp) => (
-                          <option key={mcp} value={mcp}>
-                            {mcp}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                    {filterType === "status" && (
-                      <select
-                        value={filterValue}
-                        onChange={(e) => setFilterValue(e.target.value)}
-                        className={fieldControl}
-                      >
-                        <option value="">Select Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="active">Active</option>
-                        <option value="ineligible">Ineligible</option>
-                      </select>
-                    )}
-                    <button
-                      onClick={clearFilter}
-                      className="h-10 px-3 rounded-lg text-sm font-medium text-ink-500 hover:bg-surface-muted"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
               </div>
+
+              {filterType && (
+                <div className="flex items-center gap-2">
+                  {filterType === "dob" && (
+                    <input
+                      type="text"
+                      placeholder="MM-DD-YYYY"
+                      value={filterValue}
+                      onChange={(e) => setFilterValue(e.target.value)}
+                      className={fieldControl}
+                    />
+                  )}
+                  {filterType === "mcp" && (
+                    <select
+                      value={filterValue}
+                      onChange={(e) => setFilterValue(e.target.value)}
+                      className={fieldControl}
+                    >
+                      <option value="">Select MCP</option>
+                      {uniqueMcps.map((mcp) => (
+                        <option key={mcp} value={mcp}>
+                          {mcp}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {filterType === "status" && (
+                    <select
+                      value={filterValue}
+                      onChange={(e) => setFilterValue(e.target.value)}
+                      className={fieldControl}
+                    >
+                      <option value="">Select Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="active">Active</option>
+                      <option value="ineligible">Ineligible</option>
+                    </select>
+                  )}
+                  <button
+                    onClick={clearFilter}
+                    className="h-10 px-3 rounded-lg text-sm font-medium text-ink-500 hover:bg-surface-muted"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

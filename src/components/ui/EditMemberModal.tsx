@@ -72,6 +72,7 @@ const EditMemberModal: FC<Props> = ({ member, onClose }) => {
           {text("name", "Full name")}
           {text("dob", "Date of birth", "MM-DD-YYYY")}
           {text("cin", "Client ID (CIN)")}
+          {text("healthPlanMemberId", "Health Plan Member ID")}
           <div className="flex flex-col gap-1.5">
             <label className={fieldLabel}>Managed Care Plan</label>
             <input
@@ -80,6 +81,7 @@ const EditMemberModal: FC<Props> = ({ member, onClose }) => {
               onChange={(e) => set("mcp", e.target.value)}
             />
           </div>
+          {text("phone", "Phone", "(555) 555-5555")}
           <div className="flex flex-col gap-1.5 sm:col-span-2">
             {text("address", "Residential address")}
           </div>

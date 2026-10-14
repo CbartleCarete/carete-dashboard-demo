@@ -1,21 +1,27 @@
 import type { FC, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileText,
   User,
   Clock,
   CheckCircle,
   AlertTriangle,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import StatusBadge from "../components/ui/StatusBadge";
+import { useMembers } from "../data/membersStore";
+import { useClaims } from "../data/claimsStore";
+import { useReferrals } from "../data/referralsStore";
 
-type StatTone = "pending" | "active" | "submitted" | "alerts";
+type StatTone = "pending" | "active" | "submitted" | "alerts" | "referrals";
 
 const STAT_TONES: Record<StatTone, string> = {
   pending: "bg-status-pending-bg text-status-pending-fg",
   active: "bg-status-success-bg text-status-success-fg",
   submitted: "bg-accent-50 text-accent-600",
   alerts: "bg-status-danger-bg text-status-danger-fg",
+  referrals: "bg-brand-50 text-brand-600",
 };
 
 type StatCardProps = {
@@ -23,10 +29,15 @@ type StatCardProps = {
   value: ReactNode;
   icon: LucideIcon;
   tone: StatTone;
+  onClick?: () => void;
 };
 
-const StatCard: FC<StatCardProps> = ({ label, value, icon: Icon, tone }) => (
-  <div className="bg-white rounded-2xl border border-ink-200 p-5 flex flex-col gap-4 shadow-sm">
+const StatCard: FC<StatCardProps> = ({ label, value, icon: Icon, tone, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="text-left bg-white rounded-2xl border border-ink-200 p-5 flex flex-col gap-4 shadow-sm transition hover:border-ink-300 hover:shadow-md"
+  >
     <div className="flex items-center justify-between">
       <span className="text-sm text-ink-500">{label}</span>
       <span
@@ -36,7 +47,7 @@ const StatCard: FC<StatCardProps> = ({ label, value, icon: Icon, tone }) => (
       </span>
     </div>
     <span className="text-3xl font-semibold text-ink-900">{value}</span>
-  </div>
+  </button>
 );
 
 type QueueRow = { name: string; status: "pending" | "approved"; date: string };
@@ -62,6 +73,24 @@ const viewAllBtn =
   "mt-4 w-full h-10 rounded-lg border border-ink-200 text-sm font-medium text-ink-700 hover:bg-surface-muted transition";
 
 const Home: FC = () => {
+  const navigate = useNavigate();
+  const members = useMembers();
+  const allClaims = useClaims();
+  const allReferrals = useReferrals();
+
+  const pendingEligibilityCount = members.filter(
+    (m) => m.status === "pending"
+  ).length;
+  const activeEnrollmentsCount = members.filter(
+    (m) => m.status === "active"
+  ).length;
+  const claimsSubmittedCount = allClaims.filter(
+    (c) => c.status === "pending"
+  ).length;
+  const pendingReferralsCount = allReferrals.filter(
+    (r) => r.status === "pending" || r.status === "accepted"
+  ).length;
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -71,30 +100,41 @@ const Home: FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <StatCard
           label="Pending Eligibility"
-          value="12"
+          value={pendingEligibilityCount}
           icon={Clock}
           tone="pending"
+          onClick={() => navigate("/members?status=pending")}
         />
         <StatCard
           label="Active Enrollments"
-          value="12"
+          value={activeEnrollmentsCount}
           icon={CheckCircle}
           tone="active"
+          onClick={() => navigate("/members?status=active")}
+        />
+        <StatCard
+          label="Open Referrals"
+          value={pendingReferralsCount}
+          icon={UserPlus}
+          tone="referrals"
+          onClick={() => navigate("/referrals")}
         />
         <StatCard
           label="Claims Submitted"
-          value="45"
+          value={claimsSubmittedCount}
           icon={FileText}
           tone="submitted"
+          onClick={() => navigate("/claims?tab=Submitted")}
         />
         <StatCard
           label="Alerts"
           value="3"
           icon={AlertTriangle}
           tone="alerts"
+          onClick={() => navigate("/members")}
         />
       </div>
 
@@ -105,7 +145,7 @@ const Home: FC = () => {
               Eligibility Queue
             </h2>
             <p className="text-sm text-ink-500">
-              Members awaiting eligibility confirmation.
+              Current member eligibility status.
             </p>
           </div>
           <ul className="divide-y divide-ink-200">
@@ -125,7 +165,12 @@ const Home: FC = () => {
               </li>
             ))}
           </ul>
-          <button className={viewAllBtn}>View All Pending</button>
+          <button
+            className={viewAllBtn}
+            onClick={() => navigate("/members")}
+          >
+            View All Eligibility
+          </button>
         </div>
 
         <div className={cardShell}>
@@ -154,7 +199,12 @@ const Home: FC = () => {
               </li>
             ))}
           </ul>
-          <button className={viewAllBtn}>View All Claims</button>
+          <button
+            className={viewAllBtn}
+            onClick={() => navigate("/claims")}
+          >
+            View All Claims
+          </button>
         </div>
       </div>
 
@@ -180,7 +230,10 @@ const Home: FC = () => {
             </p>
             <span className="text-xs text-ink-400">Today</span>
           </div>
-          <button className="h-9 px-3 rounded-lg text-sm font-medium text-brand-600 hover:bg-brand-50 transition">
+          <button
+            className="h-9 px-3 rounded-lg text-sm font-medium text-brand-600 hover:bg-brand-50 transition"
+            onClick={() => navigate("/members")}
+          >
             View
           </button>
         </div>

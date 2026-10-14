@@ -11,6 +11,10 @@ export interface Member {
   city?: string;
   zip?: string;
   homeless?: boolean;
+  /** Member's own phone number — contact info for PA requests, outreach, etc. */
+  phone?: string;
+  /** Health plan's own member ID (distinct from the state Medicaid CIN above). */
+  healthPlanMemberId?: string;
 }
 
 /** Split a "First Last" (or "Last, First") display name into parts. */

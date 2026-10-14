@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Clock, CheckCircle, XCircle, type LucideIcon } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Scale, type LucideIcon } from "lucide-react";
 
 type StatusType =
   | "pending"
@@ -8,6 +8,7 @@ type StatusType =
   | "submitted"
   | "denied"
   | "paid"
+  | "appealed"
   | "ineligible";
 
 interface StatusBadgeProps {
@@ -48,6 +49,11 @@ const STATUS_CONFIG: Record<
     label: "Denied",
     icon: XCircle,
     classes: "bg-status-danger-bg text-status-danger-fg",
+  },
+  appealed: {
+    label: "Appealed",
+    icon: Scale,
+    classes: "bg-accent-50 text-accent-600",
   },
   ineligible: {
     label: "Ineligible",

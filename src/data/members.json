@@ -10,7 +10,9 @@
     "address": "1420 Tulare St Apt 5",
     "city": "Fresno",
     "zip": "93706",
-    "homeless": false
+    "homeless": false,
+    "phone": "(559) 555-0142",
+    "healthPlanMemberId": "HN-8827341"
   },
   {
     "name": "James Wilson",
