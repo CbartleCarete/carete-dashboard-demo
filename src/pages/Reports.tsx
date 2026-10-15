@@ -9,6 +9,7 @@ import {
   buildEnrollmentReport,
   buildUtilizationReport,
   buildClaimsAnalysisReport,
+  buildReferralActivityReport,
   type ReportBundle,
 } from "../data/reportBuilders";
 
@@ -36,6 +37,12 @@ const REPORTS = [
     description: "Export for state reporting requirements",
     formats: "PDF, CSV",
     build: buildClaimsAnalysisReport,
+  },
+  {
+    name: "Referral Activity Report",
+    description: "Volume, outcomes, and cycle time by category and provider",
+    formats: "PDF, CSV",
+    build: buildReferralActivityReport,
   },
 ] satisfies { name: string; description: string; formats: string; build: () => ReportBundle }[];
 

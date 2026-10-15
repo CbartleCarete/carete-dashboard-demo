@@ -4,6 +4,8 @@
 
 import { getMembers } from "./membersStore";
 import { getClaims, type Claim } from "./claimsStore";
+import { getReferrals, OUTCOME_TYPE_LABELS, type Referral } from "./referralsStore";
+import { getServiceById } from "./dhcsCodes";
 import type { ReportPdfInput } from "../lib/reportPdf";
 
 export interface ReportBundle {
@@ -41,6 +43,25 @@ const MEMBER_STATUS_LABEL: Record<string, string> = {
   active: "Active",
   ineligible: "Ineligible",
 };
+
+const REFERRAL_STATUS_LABEL: Record<Referral["status"], string> = {
+  pending: "Pending Decision",
+  accepted: "Accepted",
+  scheduled: "Scheduled",
+  claimed: "Claimed",
+  closed: "Closed",
+};
+
+/** "MM-DD-YYYY" -> Date (local midnight). */
+const parseDisplayDate = (s: string | undefined): Date | undefined => {
+  if (!s) return undefined;
+  const [m, d, y] = s.split("-").map(Number);
+  if (!m || !d || !y) return undefined;
+  return new Date(y, m - 1, d);
+};
+
+const daysBetween = (a: Date, b: Date): number =>
+  Math.max(0, Math.round((b.getTime() - a.getTime()) / 86_400_000));
 
 /** 1. Monthly Financial Report — reimbursements & expenses by claim status. */
 export const buildFinancialReport = (): ReportBundle => {
@@ -325,6 +346,125 @@ export const buildClaimsAnalysisReport = (): ReportBundle => {
         (c.diagnosisCodes ?? []).join(" "),
         CLAIM_STATUS_LABEL[c.status],
         c.chargeAmount ?? 0,
+      ]),
+    },
+  };
+};
+
+/** 5. Referral Activity Report — one row per referral, with category,
+ *  provider, status, outcome, and cycle time so it can be filtered or
+ *  pivoted by category/provider in a spreadsheet. */
+export const buildReferralActivityReport = (): ReportBundle => {
+  const referrals = getReferrals();
+  const today = new Date();
+
+  const withDerived = referrals.map((r) => {
+    const service = getServiceById(r.serviceId);
+    const category = service?.category ?? "—";
+    const createdOn = parseDisplayDate(r.createdOn);
+    const closedOn = parseDisplayDate(r.closedOn);
+    const daysOpen =
+      createdOn && closedOn
+        ? daysBetween(createdOn, closedOn)
+        : createdOn
+          ? daysBetween(createdOn, today)
+          : undefined;
+    return { r, category, daysOpen };
+  });
+
+  const totalCount = referrals.length;
+  const closed = withDerived.filter((x) => x.r.status === "closed");
+  const closedCount = closed.length;
+  const openCount = totalCount - closedCount;
+  const completedCount = closed.filter(
+    (x) => x.r.outcomeType === "completed"
+  ).length;
+  const completionRate = closedCount
+    ? `${Math.round((completedCount / closedCount) * 100)}%`
+    : "—";
+  const closedDurations = closed
+    .map((x) => x.daysOpen)
+    .filter((d): d is number => d !== undefined);
+  const avgDaysToClose = closedDurations.length
+    ? `${Math.round(
+        closedDurations.reduce((sum, d) => sum + d, 0) / closedDurations.length
+      )} days`
+    : "—";
+
+  const sorted = [...withDerived].sort((a, b) =>
+    a.r.createdOn < b.r.createdOn ? 1 : -1
+  );
+
+  const pdfRows = sorted.map(({ r, category, daysOpen }) => [
+    r.id,
+    r.member,
+    category,
+    r.chosenProviderName ?? "—",
+    REFERRAL_STATUS_LABEL[r.status],
+    r.outcomeType ? OUTCOME_TYPE_LABELS[r.outcomeType] : "—",
+    daysOpen !== undefined ? String(daysOpen) : "—",
+  ]);
+
+  return {
+    pdfFilename: `referral-activity-report-${todayStamp()}.pdf`,
+    csvFilename: `referral-activity-report-${todayStamp()}.csv`,
+    pdf: {
+      title: "Referral Activity Report",
+      subtitle:
+        "Referral volume and outcomes, broken out by service category and provider.",
+      generatedOn: todayDisplay(),
+      stats: [
+        { label: "Total Referrals", value: String(totalCount) },
+        { label: "Still Open", value: String(openCount) },
+        { label: "Closed", value: String(closedCount) },
+        { label: "Completion Rate", value: completionRate },
+        { label: "Avg. Days to Close", value: avgDaysToClose },
+      ],
+      columns: [
+        { header: "Referral ID", width: 68 },
+        { header: "Member", width: 82 },
+        { header: "Category", width: 86 },
+        { header: "Provider", width: 114 },
+        { header: "Status", width: 62 },
+        { header: "Outcome", width: 62 },
+        { header: "Days Open", width: 38 },
+      ],
+      rows: pdfRows,
+    },
+    csv: {
+      headers: [
+        "Referral ID",
+        "Member",
+        "Member ID",
+        "Category",
+        "Service",
+        "Provider",
+        "Status",
+        "Outcome",
+        "Referred On",
+        "Decided On",
+        "Scheduled On",
+        "Claim ID",
+        "Claimed On",
+        "Closed On",
+        "Days Open",
+      ],
+      rows: sorted.map(({ r, category, daysOpen }) => [
+        r.id,
+        r.member,
+        r.memberId,
+        category,
+        r.serviceLabel,
+        r.chosenProviderName ?? "",
+        REFERRAL_STATUS_LABEL[r.status],
+        r.outcomeType ? OUTCOME_TYPE_LABELS[r.outcomeType] : "",
+        r.createdOn,
+        r.decidedOn ?? "",
+        r.scheduledOn ?? "",
+        r.claimId ?? "",
+        r.claimedOn ?? "",
+        r.closedOn ?? "",
+        daysOpen ?? "",
       ]),
     },
   };
