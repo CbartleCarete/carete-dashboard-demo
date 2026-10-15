@@ -59,6 +59,151 @@ export const OUTCOME_TYPE_LABELS: Record<ReferralOutcomeType, string> = {
   other: "Other",
 };
 
+const SEED: Referral[] = [
+  {
+    id: "REF-2026-010",
+    memberId: "M-004",
+    member: "Robert Johnson",
+    serviceId: "day-habilitation",
+    serviceLabel: "Day Habilitation Programs",
+    reason:
+      "Member reports limited daytime activity and increasing isolation since his last home visit.",
+    optionsPresented: [
+      {
+        providerId: "PRV-006",
+        providerName: "Bright Path Caregiver Services",
+        specialty: "Caregiver Respite & Day Habilitation",
+      },
+    ],
+    status: "pending",
+    createdOn: "05-04-2026",
+  },
+  {
+    id: "REF-2026-011",
+    memberId: "M-002",
+    member: "Jane Smith",
+    serviceId: "housing-transition-navigation",
+    serviceLabel: "Housing Transition / Navigation",
+    reason:
+      "Referred for housing navigation support ahead of her upcoming lease renewal.",
+    optionsPresented: [
+      {
+        providerId: "PRV-003",
+        providerName: "Horizon Housing Partners",
+        specialty: "Housing Navigation & Transition Services",
+      },
+    ],
+    chosenProviderId: "PRV-003",
+    chosenProviderName: "Horizon Housing Partners",
+    status: "accepted",
+    createdOn: "04-26-2026",
+    decidedOn: "04-28-2026",
+  },
+  {
+    id: "REF-2026-012",
+    memberId: "M-003",
+    member: "John Doe",
+    serviceId: "personal-care-homemaker",
+    serviceLabel: "Personal Care & Homemaker Services",
+    reason:
+      "Referred for in-home personal care support following a fall risk screening.",
+    optionsPresented: [
+      {
+        providerId: "PRV-007",
+        providerName: "Golden Oak Senior Living",
+        specialty: "Assisted Living Transitions & Personal Care",
+      },
+    ],
+    chosenProviderId: "PRV-007",
+    chosenProviderName: "Golden Oak Senior Living",
+    status: "scheduled",
+    createdOn: "04-10-2026",
+    decidedOn: "04-12-2026",
+    appointmentId: "APT-2026-021",
+    scheduledOn: "04-16-2026",
+  },
+  {
+    id: "REF-2026-013",
+    memberId: "M-007",
+    member: "James Wilson",
+    serviceId: "ecm-care-management",
+    serviceLabel: "ECM — Care Management",
+    reason:
+      "Screening flagged gaps in chronic condition follow-up; referred for clinical care management.",
+    optionsPresented: [
+      {
+        providerId: "PRV-001",
+        providerName: "Dr. Amara Okafor",
+        specialty: "ECM — Clinical Care Management",
+      },
+      {
+        providerId: "PRV-002",
+        providerName: "Marcus Webb, LCSW",
+        specialty: "ECM — Outreach & Non-Clinical Care Management",
+      },
+    ],
+    chosenProviderId: "PRV-001",
+    chosenProviderName: "Dr. Amara Okafor",
+    status: "claimed",
+    createdOn: "09-20-2025",
+    decidedOn: "09-23-2025",
+    appointmentId: "APT-2025-058",
+    scheduledOn: "10-01-2025",
+    claimId: "CLM-2024-1234",
+    claimedOn: "10-13-2025",
+  },
+  {
+    id: "REF-2025-014",
+    memberId: "M-005",
+    member: "Sarah Chen",
+    serviceId: "ecm-care-management",
+    serviceLabel: "ECM — Care Management",
+    reason:
+      "Referred for clinical care management following a missed medication refill.",
+    optionsPresented: [
+      {
+        providerId: "PRV-001",
+        providerName: "Dr. Amara Okafor",
+        specialty: "ECM — Clinical Care Management",
+      },
+    ],
+    chosenProviderId: "PRV-001",
+    chosenProviderName: "Dr. Amara Okafor",
+    status: "closed",
+    createdOn: "10-05-2025",
+    decidedOn: "10-07-2025",
+    appointmentId: "APT-2025-061",
+    scheduledOn: "10-11-2025",
+    claimId: "CLM-2024-1238",
+    claimedOn: "10-19-2025",
+    outcomeType: "completed",
+    outcome: "Service delivered — claim CLM-2024-1238 paid in full.",
+    closedOn: "10-19-2025",
+  },
+  {
+    id: "REF-2026-015",
+    memberId: "M-001",
+    member: "Maria Garcia",
+    serviceId: "assisted-living-transitions",
+    serviceLabel: "Assisted Living Facility Transitions",
+    reason: "Referred for assisted living transition support after a fall at home.",
+    optionsPresented: [
+      {
+        providerId: "PRV-007",
+        providerName: "Golden Oak Senior Living",
+        specialty: "Assisted Living Transitions & Personal Care",
+      },
+    ],
+    status: "closed",
+    createdOn: "03-18-2026",
+    decidedOn: "03-20-2026",
+    outcomeType: "declined",
+    outcome:
+      "Member declined all presented options — chose to remain in her current living situation.",
+    closedOn: "03-20-2026",
+  },
+];
+
 const STORAGE_KEY = "carete.referrals.v1";
 let referrals: Referral[] = load();
 const listeners = new Set<() => void>();
@@ -66,7 +211,7 @@ const listeners = new Set<() => void>();
 function load(): Referral[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return [...SEED];
     const parsed = JSON.parse(raw) as Referral[];
 
     // One-time repair: earlier referral IDs were only guaranteed unique
@@ -103,7 +248,7 @@ function load(): Referral[] {
 
     return fixed;
   } catch {
-    return [];
+    return [...SEED];
   }
 }
 
