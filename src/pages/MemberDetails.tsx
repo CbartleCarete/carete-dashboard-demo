@@ -513,14 +513,16 @@ const MemberDetails: FC = () => {
                                 ) : null;
                               })()}
                               <p className="mt-1">
-                                Closes automatically once that claim is paid.
+                                Closes automatically once that claim is paid
+                                &mdash; close manually instead if it
+                                won&apos;t be (e.g. denied).
                               </p>
                             </div>
                             <button
                               onClick={() => setClosingReferral(r)}
                               className="h-8 px-3 rounded-lg border border-ink-200 text-xs font-medium text-ink-700 hover:bg-surface-muted transition"
                             >
-                              Close Referral
+                              Close Manually
                             </button>
                           </div>
                         )}
